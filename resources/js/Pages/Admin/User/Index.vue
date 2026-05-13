@@ -1,0 +1,103 @@
+<script setup lang="ts">
+import { defineProps, ref } from 'vue'
+import { Link, router } from '@inertiajs/vue3'
+
+const props = defineProps<{
+  users: Array<{
+	id: string | number
+	name: string
+	email: string
+	role?: string | null
+  }>
+  q?: string
+}>()
+
+const searchTerm = ref(props.q ?? '')
+
+function submitSearch() {
+  const q = searchTerm.value.trim()
+  router.get('/admin/users', q ? { q } : {}, {
+    preserveState: true,
+    replace: true,
+  })
+}
+
+function clearSearch() {
+  searchTerm.value = ''
+  submitSearch()
+}
+</script>
+
+<template>
+  <div class="min-h-screen bg-gray-50 flex flex-col p-6">
+	<div class="flex justify-between items-center mb-6">
+	  <div class="flex items-center gap-4">
+		<Link href="/admin" class="inline-flex items-center px-3 py-2 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow">
+		  <svg class="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+		  </svg>
+		  <span class="text-sm font-medium">Back</span>
+		</Link>
+
+		<h1 class="text-3xl font-bold text-gray-800">Users</h1>
+	  </div>
+	</div>
+
+	<form @submit.prevent="submitSearch" class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+	  <label for="user-search" class="sr-only">Search users</label>
+	  <input
+		id="user-search"
+		v-model="searchTerm"
+		type="search"
+		name="q"
+		placeholder="Search users..."
+		class="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:max-w-md"
+	  />
+	  <div class="flex gap-2">
+		<button type="submit" class="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+		  Search
+		</button>
+		<button v-if="props.q" type="button" @click="clearSearch" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+		  Clear
+		</button>
+	  </div>
+	</form>
+
+	<div class="bg-white rounded-lg shadow overflow-hidden">
+	  <table class="table-auto w-full border-collapse">
+		<thead>
+		  <tr class="bg-gray-100 text-left">
+			<th class="px-6 py-2 text-gray-700">#</th>
+			<th class="px-6 py-2 text-gray-700">Name</th>
+			<th class="px-6 py-2 text-gray-700">Email</th>
+			<th class="px-6 py-2 text-gray-700">Role</th>
+			<th class="px-6 py-2 text-gray-700">Actions</th>
+		  </tr>
+		</thead>
+		<tbody>
+		  <tr v-for="(user, index) in users" :key="user.id" class="hover:bg-gray-50">
+			<td class="px-6 py-4">{{ index + 1 }}</td>
+			<td class="px-6 py-4">{{ user.name }}</td>
+			<td class="px-6 py-4 break-words">{{ user.email }}</td>
+			<td class="px-6 py-4">
+			  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+				{{ user.role ?? 'user' }}
+			  </span>
+			</td>
+			<td class="px-6 py-4">
+			  <div class="flex gap-2">
+				<Link :href="`/admin/users/${user.id}/edit`" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded shadow">Edit</Link>
+				<Link :href="`/admin/users/${user.id}`" method="delete" as="button" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow">Delete</Link>
+			  </div>
+			</td>
+		  </tr>
+		  <tr v-if="users.length === 0">
+			<td colspan="5" class="px-6 py-8 text-center text-gray-500">No users found.</td>
+		  </tr>
+		</tbody>
+	  </table>
+	</div>
+  </div>
+</template>
+
+<style scoped></style>
