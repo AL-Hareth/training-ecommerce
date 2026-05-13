@@ -19,3 +19,4 @@ What did I learn while building this project:
 - Building custom services using Laravels service container
 - Authenticating Users
 - Building robust components using vue and interact with the backend using Inertia's modules
+- How to implement Faceted search functionality
