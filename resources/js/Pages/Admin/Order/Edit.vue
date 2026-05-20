@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineProps, computed } from 'vue'
-import { Link, useForm } from '@inertiajs/vue3'
+import {Link, useForm, usePage} from '@inertiajs/vue3'
 
 type Product = {
   id?: string | number
@@ -32,6 +32,8 @@ const props = defineProps<{
   updateUrl?: string
   backUrl?: string
 }>()
+
+const user = usePage().props.auth?.user ?? null;
 
 const form = useForm({
   status: props.order.status ?? ''
@@ -147,7 +149,7 @@ function submit() {
                     id="status"
                     v-model="form.status"
                     class="block w-full rounded-lg border-gray-300 bg-white text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                    :disabled="form.processing"
+                    :disabled="form.processing || user.role !== 'admin'"
                   >
                     <option v-for="opt in availableStatuses" :key="opt" :value="opt">
                       {{ toLabel(opt) }}

@@ -137,6 +137,10 @@ const submitOrder = () => {
                             <span>Vendor Subtotal:</span>
                             <span>${{ vendor.subtotal.toFixed(2) }}</span>
                         </div>
+                        <div v-if="vendor.discount_amount > 0" class="mt-1 text-sm text-green-600 flex justify-between">
+                            <span>Discount ({{ vendor.voucher_code }}):</span>
+                            <span>-${{ vendor.discount_amount.toFixed(2) }}</span>
+                        </div>
                         <div class="mt-1 text-sm text-gray-600 flex justify-between">
                             <span>Shipping:</span>
                             <span>${{ vendor.shipping_fee.toFixed(2) }}</span>

@@ -32,11 +32,13 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(OrderRepositoryInterface::class, OrderRepository::class);
         $this->app->bind(CartRepositoryInterface::class, CartRepository::class);
         $this->app->bind(AttributeRepositoryInterface::class, AttributeRepository::class);
+        $this->app->bind(\App\Repositories\Interfaces\VoucherRepositoryInterface::class, \App\Repositories\VoucherRepository::class);
 
         // Bind concrete ProductRepository before the cached decorator to break circular dependency
         $this->app->bind(ProductRepository::class, function ($app) {
             return new ProductRepository(
                 new \App\Models\Product(),
+                new \App\Models\ProductVariant(),
                 $app->make(AttributeRepository::class)
             );
         });

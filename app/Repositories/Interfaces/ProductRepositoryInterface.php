@@ -7,8 +7,10 @@ interface ProductRepositoryInterface {
     public function getByVendorId(string $vendorId, ?string $searchTerm = '');
     public function getById(string $id);
     public function getByIdLocked(string $id);
+    public function getVariantByIdLocked(string $id);
     public function create(array $attributes);
     public function update(string $id, array $attributes);
+    public function updateVariantStock(string $variantId, int $quantity);
     public function delete(string $id);
     public function countByAttributeValueId(string $attributeValueId): int;
 }

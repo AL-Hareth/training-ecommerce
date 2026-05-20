@@ -22,4 +22,8 @@ class VendorOrder extends Model
     public function items() {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function voucher() {
+        return $this->belongsTo(Voucher::class);
+    }
 }

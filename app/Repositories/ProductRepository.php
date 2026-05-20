@@ -5,16 +5,19 @@ namespace App\Repositories;
 use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Repositories\Interfaces\AttributeRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 
 class ProductRepository implements ProductRepositoryInterface {
     protected $model;
+    protected $variantModel;
     protected $attributeRepository;
 
-    public function __construct(Product $product, AttributeRepositoryInterface $attributeRepository)
+    public function __construct(Product $product, ProductVariant $variantModel, AttributeRepositoryInterface $attributeRepository)
     {
         $this->model = $product;
+        $this->variantModel = $variantModel;
         $this->attributeRepository = $attributeRepository;
     }
 
@@ -32,11 +35,11 @@ class ProductRepository implements ProductRepositoryInterface {
                         $q->whereIn('attribute_values.id', $ids);
                     });
                 }
-                $query->with(['category', 'attributeValues.attribute']);
+                $query->with(['category', 'attributeValues.attribute', 'variants']);
             });
         } else {
             $scout->query(function ($query) {
-                $query->with(['category', 'attributeValues.attribute']);
+                $query->with(['category', 'attributeValues.attribute', 'variants']);
             });
         }
 
@@ -62,7 +65,7 @@ class ProductRepository implements ProductRepositoryInterface {
         $scout = $this->model->search($searchTerm);
 
         $scout->query(function ($query) use ($vendorId) {
-            $query->where('vendor_id', $vendorId)->with('category');
+            $query->where('vendor_id', $vendorId)->with(['category', 'attributeValues.attribute', 'variants']);
         });
 
         $scout->orderBy('created_at', 'desc');
@@ -78,22 +81,74 @@ class ProductRepository implements ProductRepositoryInterface {
 
     public function getById($id)
     {
-        return $this->model->query()->with(['category', 'vendor', 'attributeValues.attribute'])->findOrFail($id);
+        return $this->model->query()->with(['category', 'vendor', 'attributeValues.attribute', 'variants'])->findOrFail($id);
     }
 
     public function getByIdLocked($id)
     {
-        return $this->model->query()->with(['category', 'vendor', 'attributeValues.attribute'])->lockForUpdate()->findOrFail($id);
+        return $this->model->query()->with(['category', 'vendor', 'attributeValues.attribute', 'variants'])->lockForUpdate()->findOrFail($id);
+    }
+
+    public function getVariantByIdLocked(string $id)
+    {
+        return $this->variantModel->query()->lockForUpdate()->findOrFail($id);
     }
 
     public function create(array $attributes)
     {
-        return $this->model->query()->create($attributes);
+        $variants = $attributes['variants'] ?? [];
+        unset($attributes['variants']);
+
+        $product = $this->model->query()->create($attributes);
+
+        if (!empty($variants)) {
+            $product->variants()->createMany($variants);
+        }
+
+        return $product;
     }
 
     public function update($id, array $attributes)
     {
-        return $this->model->query()->findOrFail($id)->update($attributes);
+        $variants = $attributes['variants'] ?? [];
+        unset($attributes['variants']);
+
+        $product = $this->model->query()->findOrFail($id);
+        $product->update($attributes);
+
+        if (!empty($variants)) {
+            // Simple approach: delete old variants and create new ones
+            // Or more complex: match by ID and update/create/delete
+            // Given the UpdateProductRequest has variants.*.id, we should probably be more careful.
+            
+            $existingVariantIds = $product->variants()->pluck('id')->toArray();
+            $newVariantIds = collect($variants)->pluck('id')->filter()->toArray();
+            
+            // Delete variants not in the new list
+            $product->variants()->whereNotIn('id', $newVariantIds)->delete();
+            
+            foreach ($variants as $variantData) {
+                if (isset($variantData['id'])) {
+                    $variant = $product->variants()->findOrFail($variantData['id']);
+                    $variant->update([
+                        'price' => $variantData['price'],
+                        'stock' => $variantData['stock'],
+                        'attributes' => $variantData['attributes'],
+                    ]);
+                } else {
+                    $product->variants()->create($variantData);
+                }
+            }
+        }
+
+        return $product;
+    }
+
+    public function updateVariantStock(string $variantId, int $quantity)
+    {
+        $variant = $this->variantModel->query()->findOrFail($variantId);
+        $variant->update(['stock' => $quantity]);
+        return $variant;
     }
 
     public function delete($id)

@@ -27,7 +27,7 @@ class ProductFactory extends Factory
             'stock' => fake()->numberBetween(0, 100),
             'category_id' => Category::factory(),
             'image' => fake()->imageUrl(),
-            'vendor_id' => User::where('role', 'vendor')->orWhere('role', 'admin')->inRandomOrder()->first()->id,
+            'vendor_id' => User::where('role', 'vendor')->orWhere('role', 'admin')->first()?->id ?? User::factory()->create(['role' => 'vendor'])->id,
         ];
     }
 

@@ -36,6 +36,10 @@ class User extends Authenticatable
         return $this->hasOne(Cart::class);
     }
 
+    public function vouchers() {
+        return $this->hasMany(Voucher::class, 'vendor_id');
+    }
+
     public function searchableAs(): string
     {
         return 'users';

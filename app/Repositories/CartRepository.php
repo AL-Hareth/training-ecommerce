@@ -21,6 +21,11 @@ class CartRepository implements CartRepositoryInterface {
             ->with(['items.product.vendor'])
             ->where('user_id', $userId)
             ->first();
+
+        if (!$data) {
+            return null;
+        }
+
         // Flatten the image from the product
         $data->items->transform(function ($item) {
             $item->product->image = $item->product->getFirstMediaUrl('images', 'thumb');
@@ -65,6 +70,10 @@ class CartRepository implements CartRepositoryInterface {
 
     public function clearCart(string $userId)
     {
-        return $this->getCurrentCart($userId)->items()->delete();
+        $cart = $this->getCurrentCart($userId);
+        if ($cart) {
+            return $cart->items()->delete();
+        }
+        return false;
     }
 }

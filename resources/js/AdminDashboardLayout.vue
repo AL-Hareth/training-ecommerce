@@ -17,6 +17,7 @@ const canSeeProducts = computed(() => role.value === 'admin' || role.value === '
 const canSeeOrders = computed(() => role.value === 'admin' || role.value === 'vendor')
 const canSeeUsers = computed(() => role.value === 'admin')
 const canSeeAttributes = computed(() => role.value === 'admin')
+const canSeeVouchers = computed(() => role.value === 'admin' || role.value === 'vendor')
 
 const navigationItems = computed(() => [
   {
@@ -49,12 +50,18 @@ const navigationItems = computed(() => [
     icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-4.596a3 3 0 11-6 0 3 3 0 016 0z',
     show: canSeeUsers.value
   },
-    {
-        name: 'Attributes',
-        href: '/admin/attributes',
-        icon: 'M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM12 3v4M8 3v4M16 3v4M8 12h.01M12 12h4',
-        show: canSeeAttributes.value
-    }
+  {
+      name: 'Attributes',
+      href: '/admin/attributes',
+      icon: 'M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM12 3v4M8 3v4M16 3v4M8 12h.01M12 12h4',
+      show: canSeeAttributes.value
+  },
+  {
+      name: 'Vouchers',
+      href: '/admin/vouchers',
+      icon: 'M2 7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a2 2 0 0 0 0 4v3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-3a2 2 0 0 0 0-4V7z M8 6 L8 8.5 M8 10.5 L8 13.5 M8 15.5 L8 18',
+      show: canSeeAttributes.value
+  }
 ].filter(item => item.show))
 </script>
 

@@ -9,7 +9,7 @@ class OrderItem extends Model
 {
     use HasUuids;
     protected $fillable = [
-        'order_id', 'product_id', 'quantity', 'ordering_price'
+        'order_id', 'product_id', 'variant_id', 'quantity', 'ordering_price'
     ];
 
     public function vendorOrder() {
@@ -18,5 +18,9 @@ class OrderItem extends Model
 
     public function product() {
         return $this->belongsTo(Product::class);
+    }
+
+    public function variant() {
+        return $this->belongsTo(ProductVariant::class, 'variant_id');
     }
 }

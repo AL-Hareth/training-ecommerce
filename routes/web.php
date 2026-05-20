@@ -51,6 +51,13 @@ Route::prefix('admin')
                 Route::delete('/{userId}', 'destroy')->name('admin.users.destroy');
             });
 
+        Route::prefix('orders')
+            ->controller(AdminOrderController::class)
+            ->group(function () {
+                Route::put('/{orderId}', 'update')->name('admin.orders.update');
+                Route::get('/{orderId}/edit', 'edit')->name('admin.orders.edit');
+            });
+
         Route::prefix('attributes')
             ->controller(AdminAttributeController::class)
             ->group(function () {
@@ -84,8 +91,17 @@ Route::prefix('admin')
             ->group(function () {
             Route::get('/', 'index')->name('admin.orders.index');
             Route::get('/{orderId}', 'show')->name('admin.orders.show');
-            Route::put('/{orderId}', 'update')->name('admin.orders.update');
-            Route::get('/{orderId}/edit', 'edit')->name('admin.orders.edit');
+        });
+
+        Route::prefix('vouchers')
+            ->controller(\App\Http\Controllers\Admin\VoucherController::class)
+            ->group(function () {
+            Route::get('/', 'index')->name('admin.vouchers.index');
+            Route::get('/create', 'create')->name('admin.vouchers.create');
+            Route::get('/{voucherId}/edit', 'edit')->name('admin.vouchers.edit');
+            Route::put('/{voucherId}', 'update')->name('admin.vouchers.update');
+            Route::post('/', 'store')->name('admin.vouchers.store');
+            Route::delete('/{voucherId}', 'destroy')->name('admin.vouchers.destroy');
         });
     });
 
@@ -104,6 +120,8 @@ Route::controller(StorefrontCartController::class)
         Route::delete('/{itemId}', 'destroy')->name('cart.destroy');
         Route::post('/add', 'store')->name('cart.store');
         Route::post('/clear', 'clear')->name('cart.clear');
+        Route::post('/voucher', 'applyVoucher')->name('cart.voucher');
+        Route::delete('/voucher/{vendorId}', 'removeVoucher')->name('cart.voucher.remove');
     });
 
 Route::middleware(['auth'])->group(function () {

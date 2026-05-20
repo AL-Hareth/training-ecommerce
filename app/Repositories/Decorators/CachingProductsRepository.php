@@ -35,6 +35,10 @@ class CachingProductsRepository implements ProductRepositoryInterface
         return $this->repository->getByIdLocked($id);
     }
 
+    public function getVariantByIdLocked(string $id) {
+        return $this->repository->getVariantByIdLocked($id);
+    }
+
     public function create(array $attributes)
     {
         Cache::tags(['products'])->flush();
@@ -45,6 +49,12 @@ class CachingProductsRepository implements ProductRepositoryInterface
     {
         Cache::tags(['products'])->flush();
         return $this->repository->update($id, $attributes);
+    }
+
+    public function updateVariantStock(string $variantId, int $quantity)
+    {
+        Cache::tags(['products'])->flush();
+        return $this->repository->updateVariantStock($variantId, $quantity);
     }
 
     public function delete(string $id)

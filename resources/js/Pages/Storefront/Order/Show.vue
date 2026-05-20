@@ -19,6 +19,8 @@ type Order = {
     id: string | number
     status?: string | null
     total_price?: number | string | null
+    subtotal?: number | string | null
+    discount_amount?: number | string | null
     created_at?: string | null
     payment_method?: string | null
     shipping_address?: string | null
@@ -198,6 +200,18 @@ function statusBadgeClasses(status?: string | null) {
                     <div class="rounded-2xl border border-gray-100 bg-white shadow-sm p-6">
                         <h2 class="text-lg font-semibold text-gray-800 mb-4">Order Summary</h2>
                         <dl class="space-y-3 text-sm text-gray-600">
+                            <div v-if="order.subtotal" class="flex justify-between border-t border-gray-100 pt-3 text-sm text-gray-600">
+                                <dt>Subtotal</dt>
+                                <dd>{{ formatMoney(order.subtotal) }}</dd>
+                            </div>
+                            <div v-if="order.discount_amount" class="flex justify-between text-sm text-green-600">
+                                <dt>Discount</dt>
+                                <dd>-{{ formatMoney(order.discount_amount) }}</dd>
+                            </div>
+                            <div v-if="order.subtotal && order.total_price" class="flex justify-between text-sm text-gray-600">
+                                <dt>Shipping</dt>
+                                <dd>{{ formatMoney(Number(order.total_price) - (Number(order.subtotal) - Number(order.discount_amount || 0))) }}</dd>
+                            </div>
                             <div class="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
                                 <dt>Total Amount</dt>
                                 <dd class="text-indigo-600">{{ formatMoney(order.total_price) }}</dd>

@@ -5,12 +5,16 @@ namespace App\Repositories;
 use App\Models\Order;
 use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
+use App\Repositories\Interfaces\VoucherRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
 class OrderRepository implements OrderRepositoryInterface {
     protected $model;
-    public function __construct(Order $order) {
+    protected $voucherRepository;
+
+    public function __construct(Order $order, VoucherRepositoryInterface $voucherRepository) {
         $this->model = $order;
+        $this->voucherRepository = $voucherRepository;
     }
 
     public function getAll(?string $searchTerm = '', int|null $page = null, int|null $limit = null) {
@@ -105,6 +109,7 @@ class OrderRepository implements OrderRepositoryInterface {
         // 2. Flatten the items from the nested vendorOrders so the frontend can read `order.items`
         $paginator->getCollection()->transform(function ($order) {
             $order->setAttribute('items', $order->vendorOrders->flatMap->items);
+            $order->setAttribute('discount_amount', $order->vendorOrders->sum('discount_amount'));
             return $order;
         });
 
@@ -116,6 +121,8 @@ class OrderRepository implements OrderRepositoryInterface {
         $order = $this->model->with('vendorOrders.items.product')->findOrFail($orderId);
         // flatten the items
         $order->setAttribute('items', $order->vendorOrders->flatMap->items);
+        $order->setAttribute('discount_amount', $order->vendorOrders->sum('discount_amount'));
+        $order->setAttribute('subtotal', $order->vendorOrders->sum('subtotal'));
         $order->items->transform(function ($item) {
             $item->product->image = $item->product->getFirstMediaUrl('images', 'thumb');
             return $item;
@@ -144,6 +151,17 @@ class OrderRepository implements OrderRepositoryInterface {
 
     public function updateOrderStatus(string $orderId, string $status)
     {
-        return $this->model->query()->findOrFail($orderId)->update(['status' => $status]);
+        $order = $this->model->query()->findOrFail($orderId);
+        
+        // If transitioning to cancelled, decrement voucher counts
+        if ($status === 'cancelled' && $order->status !== 'cancelled') {
+            foreach ($order->vendorOrders as $vendorOrder) {
+                if ($vendorOrder->voucher_id) {
+                    $this->voucherRepository->decrementUsage($vendorOrder->voucher_id);
+                }
+            }
+        }
+
+        return $order->update(['status' => $status]);
     }
 }

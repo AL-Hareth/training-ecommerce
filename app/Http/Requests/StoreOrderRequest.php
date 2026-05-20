@@ -41,6 +41,7 @@ class StoreOrderRequest extends FormRequest
 
             // Validate the keys inside EACH item array
             'vendors.*.items.*.product_id' => ['required', 'uuid', 'exists:products,id'],
+            'vendors.*.items.*.variant_id' => ['nullable', 'uuid', 'exists:product_variants,id'],
             'vendors.*.items.*.price' => ['required', 'numeric', 'min:0'], // Ordering price
             'vendors.*.items.*.quantity' => ['required', 'integer', 'min:1'],
         ];
