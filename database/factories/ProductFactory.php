@@ -21,12 +21,12 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'description' => fake()->text(),
-            'price' => fake()->randomFloat(2, 10, 1000),
-            'stock' => fake()->numberBetween(0, 100),
+            'name' => $this->faker->name(),
+            'description' => $this->faker->text(),
+            'price' => $this->faker->randomFloat(2, 10, 1000),
+            'stock' => $this->faker->numberBetween(0, 100),
             'category_id' => Category::factory(),
-            'image' => fake()->imageUrl(),
+            'image' => $this->faker->imageUrl(),
             'vendor_id' => User::where('role', 'vendor')->orWhere('role', 'admin')->first()?->id ?? User::factory()->create(['role' => 'vendor'])->id,
         ];
     }
