@@ -1,0 +1,71 @@
+version: '3.8'
+
+x-app-base: &app-base
+    build:
+        context: .
+        target: fpm_server
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+        - redis
+        - meilisearch
+        - db
+
+services:
+    app:
+        <<: *app-base
+        container_name: laravel_app
+        volumes:
+            - .:/var/www/html
+
+    web:
+        image: nginx:alpine
+        container_name: laravel_web
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            # Prepare for SSL later
+            # - "443:443"
+        volumes:
+            - ./public:/var/www/html/public
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - app
+
+    # Added MySQL for concurrent e-commerce transactions
+    db:
+        image: mysql:8.0
+        container_name: laravel_db
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_USER: ${DB_USERNAME}
+        volumes:
+            - db-data:/var/lib/mysql
+
+    redis:
+        image: redis:alpine
+        container_name: laravel_redis
+        restart: unless-stopped
+        # PORTS REMOVED: Redis is now only accessible to Laravel internally
+        volumes:
+            - redis-data:/data
+
+    meilisearch:
+        image: getmeili/meilisearch:latest
+        container_name: laravel_meilisearch
+        restart: unless-stopped
+        # PORTS REMOVED: Kept internal. If your frontend Vue app queries Meilisearch directly
+        # instead of routing through Laravel, we will need to route this through Nginx later.
+        environment:
+            - MEILI_MASTER_KEY=${MEILISEARCH_KEY}
+            - MEILI_ENV=production
+        volumes:
+            - meili-data:/meili_data
+
+volumes:
+    db-data:
+    redis-data:
+    meili-data:

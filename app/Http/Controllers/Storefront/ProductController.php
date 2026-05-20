@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\Interfaces\AttributeRepositoryInterface;
+use App\Repositories\Interfaces\CategoryRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,6 +14,7 @@ class ProductController extends Controller
     public function __construct(
         protected ProductRepositoryInterface $productRepository,
         protected AttributeRepositoryInterface $attributeRepository,
+        protected CategoryRepositoryInterface $categoryRepository,
     ) {}
 
     public function index(Request $request)
@@ -21,16 +23,18 @@ class ProductController extends Controller
         $page              = (int) $request->input('page', 1);
         $limit             = (int) $request->input('limit', 12);
         $attributeValueIds = (array) $request->input('attributes', []);
+        $categoryId        = $request->input('category_id');
 
         $products = $this->productRepository->getAll(
             $searchTerm,
             $page,
             $limit,
             $attributeValueIds,
+            $categoryId
         );
 
         $total = count(
-            $this->productRepository->getAll($searchTerm, null, null, $attributeValueIds)
+            $this->productRepository->getAll($searchTerm, null, null, $attributeValueIds, $categoryId)
         );
 
         return Inertia::render('Storefront/Product/Index', [
@@ -41,6 +45,8 @@ class ProductController extends Controller
             'total'            => $total,
             'attributes'       => $this->attributeRepository->getAll(),
             'activeAttributes' => $attributeValueIds,
+            'categories'       => $this->categoryRepository->getAll(),
+            'activeCategory'   => $categoryId,
         ]);
     }
 

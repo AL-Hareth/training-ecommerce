@@ -39,7 +39,7 @@ const vendorSubtotals = computed(() => {
     items.value.forEach(it => {
         if (!it.product) return
         const vendorId = it.product.vendor_id?.toString() || 'unknown'
-        // If it's a variant, we should ideally have the variant price here. 
+        // If it's a variant, we should ideally have the variant price here.
         // For now, let's assume the backend provides the correct price or we use the product price.
         const price = it.product.discounted_price != null ? Number(it.product.discounted_price) : (it.product.price != null ? Number(it.product.price) : 0)
         subtotals[vendorId] = (subtotals[vendorId] || 0) + (price * it.quantity)
@@ -148,7 +148,7 @@ function handleExpired() {
                   </span>
                 </div>
               </div>
-              
+
               <div class="flex items-center justify-between mt-4">
                 <div class="text-sm text-gray-500">
                   Qty: <span class="font-bold text-gray-800">{{ item.quantity }}</span>
@@ -179,18 +179,18 @@ function handleExpired() {
         <div class="space-y-6">
           <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-6">
             <h2 class="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
-            
+
             <div class="space-y-4 mb-6">
               <div class="flex justify-between text-gray-600">
                 <span>Subtotal</span>
                 <span class="font-bold">${{ subtotal.toFixed(2) }}</span>
               </div>
-              
+
               <div v-if="totalDiscount > 0" class="flex justify-between text-green-600">
                 <span>Discounts</span>
                 <span class="font-bold">-${{ totalDiscount.toFixed(2) }}</span>
               </div>
-              
+
               <div class="flex justify-between text-gray-600">
                 <span>Shipping</span>
                 <span class="text-xs italic">Calculated at checkout</span>
@@ -208,8 +208,8 @@ function handleExpired() {
             </div>
 
             <form @submit.prevent="applyVoucher" class="mb-8">
-              <div class="flex gap-2">
-                <input type="text" v-model="voucherForm.code" placeholder="Voucher Code" class="flex-1 rounded-lg border-gray-200 text-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+              <div class="flex flex-col gap-2">
+                <input type="text" v-model="voucherForm.code" placeholder="Voucher Code" class="flex-1 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 border border-gray-400 p-2" required>
                 <button type="submit" :disabled="voucherForm.processing" class="px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg hover:bg-black transition-colors disabled:opacity-50">
                   Apply
                 </button>

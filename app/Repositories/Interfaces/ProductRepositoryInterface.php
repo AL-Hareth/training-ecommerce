@@ -3,7 +3,7 @@
 namespace App\Repositories\Interfaces;
 
 interface ProductRepositoryInterface {
-    public function getAll(?string $searchTerm = '', int|null $page = null, int|null $limit = null, array $attributeValueIds = []);
+    public function getAll(?string $searchTerm = '', int|null $page = null, int|null $limit = null, array $attributeValueIds = [], ?string $categoryId = null);
     public function getByVendorId(string $vendorId, ?string $searchTerm = '');
     public function getById(string $id);
     public function getByIdLocked(string $id);

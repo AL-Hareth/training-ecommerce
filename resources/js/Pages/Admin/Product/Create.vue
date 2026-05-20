@@ -19,6 +19,7 @@ const form = useForm({
   stock: null as number | null,
   discount_type: null as string | null,
   discount_value: null as number | null,
+  discount_expiration: null as string | null,
   image: null as File | null,
   attribute_value_ids: [] as string[],
   variants: [] as Array<{
@@ -83,7 +84,7 @@ function submitForm() {
 }
 
 function resetForm() {
-  form.reset('name', 'description', 'category_id', 'price', 'stock', 'image')
+  form.reset('name', 'description', 'category_id', 'price', 'stock', 'image', 'discount_type', 'discount_value', 'discount_expiration')
   form.attribute_value_ids = []
   form.variants = []
 }
@@ -177,6 +178,40 @@ const descriptionCount = computed(() => (form.description || '').length)
                     <input id="stock" name="stock" type="number" v-model.number="form.stock" class="block w-full rounded-md border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="0" />
                   </div>
                   <p v-if="form.errors.stock" class="mt-2 text-sm text-red-600">{{ form.errors.stock }}</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Promotion & Discounts -->
+            <section>
+              <h2 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Promotion & Discounts</h2>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label for="discount_type" class="block text-sm font-medium text-gray-700">Discount Type</label>
+                  <div class="mt-1">
+                    <select id="discount_type" v-model="form.discount_type" class="block w-full rounded-md border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                      <option :value="null">No Discount</option>
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">Fixed Amount ($)</option>
+                    </select>
+                  </div>
+                  <p v-if="form.errors.discount_type" class="mt-2 text-sm text-red-600">{{ form.errors.discount_type }}</p>
+                </div>
+
+                <div>
+                  <label for="discount_value" class="block text-sm font-medium text-gray-700">Discount Value</label>
+                  <div class="mt-1">
+                    <input id="discount_value" type="number" step="0.01" v-model.number="form.discount_value" :disabled="!form.discount_type" class="block w-full rounded-md border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-50" placeholder="0.00" />
+                  </div>
+                  <p v-if="form.errors.discount_value" class="mt-2 text-sm text-red-600">{{ form.errors.discount_value }}</p>
+                </div>
+
+                <div>
+                  <label for="discount_expiration" class="block text-sm font-medium text-gray-700">Expires At</label>
+                  <div class="mt-1">
+                    <input id="discount_expiration" type="datetime-local" v-model="form.discount_expiration" :disabled="!form.discount_type" class="block w-full rounded-md border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-50" />
+                  </div>
+                  <p v-if="form.errors.discount_expiration" class="mt-2 text-sm text-red-600">{{ form.errors.discount_expiration }}</p>
                 </div>
               </div>
             </section>

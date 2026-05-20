@@ -26,11 +26,12 @@ const props = defineProps<{
     values: Array<{ id: string; value: string, count: number }>
   }>
   activeAttributes?: string[]
-}>()
+  categories?: Array<{ id: string | number; name: string }>
+  activeCategory?: string | number | null
+  }>()
 
-const showFullAttributeValues = reactive<Record<string, boolean>>({}); 
-const NUMBER_OF_SHOWN_ATTRIBUTES = 5;
-
+  const showFullAttributeValues = reactive<Record<string, boolean>>({});
+  const NUMBER_OF_SHOWN_ATTRIBUTES = 5;
 // ── Pagination ────────────────────────────────────────────────────────────────
 const currentPage = computed(() => Number(props.page ?? 1))
 const perPage     = computed(() => Number(props.limit ?? 12))
@@ -74,6 +75,7 @@ onUnmounted(() => {
 // ── Filters ───────────────────────────────────────────────────────────────────
 const searchTerm       = ref(props.q ?? '')
 const selectedAttributes = ref<string[]>([...(props.activeAttributes ?? [])])
+const selectedCategory   = ref<string | number | null>(props.activeCategory ?? null)
 
 function toggleAttribute(valueId: string) {
   const idx = selectedAttributes.value.indexOf(valueId)
@@ -87,6 +89,7 @@ function toggleAttribute(valueId: string) {
 
 function clearAllFilters() {
   selectedAttributes.value = []
+  selectedCategory.value = null
   searchTerm.value = ''
   applyFilters(1)
 }
@@ -96,6 +99,7 @@ function applyFilters(page = currentPage.value) {
   router.get('/products', {
     ...(q ? { q } : {}),
     ...(selectedAttributes.value.length ? { attributes: selectedAttributes.value } : {}),
+    ...(selectedCategory.value ? { category_id: selectedCategory.value } : {}),
     page,
     limit: perPage.value,
   }, {
@@ -121,16 +125,21 @@ function buildUrl(page: number) {
   const params = url.searchParams
   params.set('page', String(page))
   params.set('limit', String(perPage.value))
-  
+
   // Clear existing attributes to avoid duplicates if appending
   params.delete('attributes[]')
   selectedAttributes.value.forEach(id => params.append('attributes[]', id))
-  
+
+  if (selectedCategory.value) {
+    params.set('category_id', String(selectedCategory.value))
+  } else {
+    params.delete('category_id')
+  }
+
   const q = searchTerm.value.trim()
   if (q) params.set('q', q); else params.delete('q')
   return `${url.pathname}?${params.toString()}${url.hash ?? ''}`
 }
-
 function addToCart(product: { id: string | number } | any) {
   router.post('/cart/add', { product_id: product.id, quantity: 1 }, { preserveScroll: true })
 }
@@ -174,7 +183,7 @@ function getPriceDisplay(product: any) {
     <div class="max-w-7xl mx-auto w-full px-6 pb-12">
       <!-- Search & Mobile Filter Toggle -->
       <div class="flex flex-col md:flex-row gap-4 mb-8">
-        <form @submit.prevent="applyFilters(1)" class="flex-1 relative group">
+        <form @submit.prevent="applyFilters(1)" class="flex-[2] relative group">
           <input
             v-model="searchTerm"
             type="search"
@@ -187,6 +196,19 @@ function getPriceDisplay(product: any) {
             </svg>
           </div>
         </form>
+
+        <div v-if="(props.categories ?? []).length > 0" class="flex-1">
+          <select
+            v-model="selectedCategory"
+            @change="applyFilters(1)"
+            class="w-full h-12 px-4 rounded-xl border-none shadow-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-indigo-500 transition-all text-sm appearance-none bg-white cursor-pointer"
+          >
+            <option :value="null">All Categories</option>
+            <option v-for="cat in props.categories" :key="cat.id" :value="cat.id">
+              {{ cat.name }}
+            </option>
+          </select>
+        </div>
 
         <button
           v-if="(props.attributes ?? []).length > 0"
@@ -205,15 +227,14 @@ function getPriceDisplay(product: any) {
       <div class="flex gap-8">
         <!-- Desktop Sidebar Filters -->
         <aside v-if="(props.attributes ?? []).length > 0" class="hidden md:block w-64 shrink-0">
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-6">
+          <div class="rounded-2xl sticky top-0">
             <div class="flex items-center justify-between mb-6">
-              <h2 class="text-sm font-black text-gray-900 uppercase tracking-widest">Filters</h2>
               <button v-if="hasActiveFilters" @click="clearAllFilters" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 uppercase underline">Clear</button>
             </div>
 
-            <div class="space-y-8">
-              <div v-for="attr in props.attributes" :key="attr.id">
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">{{ attr.name }}</p>
+            <div class="space-y-4">
+              <div v-for="attr in props.attributes" :key="attr.id" class="bg-white border border-gray-200 py-4 px-3 rounded-lg shadow-sm">
+                <p class="text-[15px] font-bold text-indigo-400 uppercase tracking-widest mb-4 text-center">{{ attr.name }}</p>
                 <div class="space-y-3">
                   <label
                     v-for="val in (showFullAttributeValues[attr.id] ? attr.values : attr.values.slice(0, NUMBER_OF_SHOWN_ATTRIBUTES))"
@@ -232,9 +253,9 @@ function getPriceDisplay(product: any) {
                     <span class="ml-3 text-sm text-gray-600 group-hover:text-gray-900 transition-colors" :class="{'font-bold text-gray-900': selectedAttributes.includes(val.id)}">
                       {{ val.value }}
                     </span>
-                    <span class="ml-auto text-[10px] font-bold text-gray-300">{{ val.count }}</span>
+                    <span class="ml-auto text-[12px] font-bold text-indigo-900 bg-indigo-100 px-3 rounded-lg">{{ val.count }}</span>
                   </label>
-                  
+
                   <button
                     v-if="attr.values.length > NUMBER_OF_SHOWN_ATTRIBUTES"
                     @click="showFullAttributeValues[attr.id] = !showFullAttributeValues[attr.id]"
@@ -291,7 +312,7 @@ function getPriceDisplay(product: any) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                
+
                 <!-- Badge -->
                 <div v-if="product.discount_type" class="absolute top-3 left-3 px-2 py-1 bg-red-500 text-white text-[10px] font-black rounded uppercase shadow-lg">
                   {{ product.discount_type === 'percentage' ? `${product.discount_value}% OFF` : 'Sale' }}
@@ -320,7 +341,7 @@ function getPriceDisplay(product: any) {
                       ${{ Number(product.price).toFixed(2) }}
                     </span>
                   </div>
-                  
+
                   <button
                     @click.prevent="addToCart(product)"
                     class="w-10 h-10 rounded-full bg-gray-50 text-gray-900 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm active:scale-90"
@@ -351,8 +372,8 @@ function getPriceDisplay(product: any) {
                     :href="buildUrl(p)"
                     :class="[
                       'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all',
-                      p === currentPage 
-                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' 
+                      p === currentPage
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
                         : 'bg-white border border-gray-200 text-gray-600 hover:border-indigo-500 hover:text-indigo-500'
                     ]"
                   >

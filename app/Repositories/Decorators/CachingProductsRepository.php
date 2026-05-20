@@ -13,11 +13,11 @@ class CachingProductsRepository implements ProductRepositoryInterface
         $this->repository = $repository;
     }
 
-    public function getAll(?string $searchTerm = '', ?int $page = null, ?int $limit = null, array $attributeValueIds = [])
+    public function getAll(?string $searchTerm = '', ?int $page = null, ?int $limit = null, array $attributeValueIds = [], ?string $categoryId = null)
     {
-        $key = 'products.all.q' . md5($searchTerm ?? '') . ".p{$page}.l{$limit}.a" . md5(json_encode($attributeValueIds));
-        return Cache::tags(['products'])->remember($key, 3600, function () use ($searchTerm, $page, $limit, $attributeValueIds) {
-            return $this->repository->getAll($searchTerm, $page, $limit, $attributeValueIds)->toArray();
+        $key = 'products.all.q' . md5($searchTerm ?? '') . ".p{$page}.l{$limit}.a" . md5(json_encode($attributeValueIds)) . ".c" . ($categoryId ?? 'none');
+        return Cache::tags(['products'])->remember($key, 3600, function () use ($searchTerm, $page, $limit, $attributeValueIds, $categoryId) {
+            return $this->repository->getAll($searchTerm, $page, $limit, $attributeValueIds, $categoryId)->toArray();
         });
     }
 

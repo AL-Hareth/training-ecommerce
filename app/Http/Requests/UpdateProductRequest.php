@@ -31,6 +31,7 @@ class UpdateProductRequest extends FormRequest
             'image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'discount_type' => 'nullable|in:percentage,fixed',
             'discount_value' => 'nullable|numeric|min:0',
+            'discount_expiration' => 'nullable|date|after:now',
             'variants' => 'nullable|array',
             'variants.*.id' => 'nullable|exists:product_variants,id',
             'variants.*.price' => 'required_with:variants|numeric|min:0',

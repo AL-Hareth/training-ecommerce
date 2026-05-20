@@ -12,6 +12,7 @@ const props = defineProps<{
     stock?: number | null
     discount_type?: string | null
     discount_value?: number | null
+    discount_expiration?: string | null
     variants?: Array<{
       id: string
       price: number
@@ -28,6 +29,18 @@ const props = defineProps<{
   activeAttributeValues?: string[]
 }>()
 
+const formatForInput = (dateStr: string | null | undefined) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 const initial = {
   name: props.product.name ?? '',
   description: props.product.description ?? '',
@@ -36,6 +49,7 @@ const initial = {
   stock: props.product.stock ?? null,
   discount_type: props.product.discount_type ?? null,
   discount_value: props.product.discount_value ?? null,
+  discount_expiration: formatForInput(props.product.discount_expiration),
   attribute_value_ids: [...(props.activeAttributeValues ?? [])],
   variants: props.product.variants ? props.product.variants.map(v => {
     const attribute_list = Object.entries(v.attributes).map(([name, value]) => ({ name, value }))
@@ -51,6 +65,7 @@ const form = useForm({
   stock: initial.stock as number | null,
   discount_type: initial.discount_type as string | null,
   discount_value: initial.discount_value as number | null,
+  discount_expiration: initial.discount_expiration as string | null,
   image: null as File | null,
   attribute_value_ids: initial.attribute_value_ids as string[],
   variants: initial.variants as Array<{
@@ -123,6 +138,7 @@ function resetForm() {
   form.stock = initial.stock
   form.discount_type = initial.discount_type
   form.discount_value = initial.discount_value
+  form.discount_expiration = initial.discount_expiration
   form.image = null
   form.attribute_value_ids = [...initial.attribute_value_ids]
   form.variants = initial.variants.map(v => ({ ...v, attribute_list: v.attribute_list.map(a => ({...a})) }))
@@ -215,6 +231,40 @@ const descriptionCount = computed(() => (form.description || '').length)
                     <input id="stock" name="stock" type="number" v-model.number="form.stock" class="block w-full rounded-md border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
                   </div>
                   <p v-if="form.errors.stock" class="mt-2 text-sm text-red-600">{{ form.errors.stock }}</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Promotion & Discounts -->
+            <section>
+              <h2 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2">Promotion & Discounts</h2>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label for="discount_type" class="block text-sm font-medium text-gray-700">Discount Type</label>
+                  <div class="mt-1">
+                    <select id="discount_type" v-model="form.discount_type" class="block w-full rounded-md border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                      <option :value="null">No Discount</option>
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">Fixed Amount ($)</option>
+                    </select>
+                  </div>
+                  <p v-if="form.errors.discount_type" class="mt-2 text-sm text-red-600">{{ form.errors.discount_type }}</p>
+                </div>
+
+                <div>
+                  <label for="discount_value" class="block text-sm font-medium text-gray-700">Discount Value</label>
+                  <div class="mt-1">
+                    <input id="discount_value" type="number" step="0.01" v-model.number="form.discount_value" :disabled="!form.discount_type" class="block w-full rounded-md border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-50" placeholder="0.00" />
+                  </div>
+                  <p v-if="form.errors.discount_value" class="mt-2 text-sm text-red-600">{{ form.errors.discount_value }}</p>
+                </div>
+
+                <div>
+                  <label for="discount_expiration" class="block text-sm font-medium text-gray-700">Expires At</label>
+                  <div class="mt-1">
+                    <input id="discount_expiration" type="datetime-local" v-model="form.discount_expiration" :disabled="!form.discount_type" class="block w-full rounded-md border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-50" />
+                  </div>
+                  <p v-if="form.errors.discount_expiration" class="mt-2 text-sm text-red-600">{{ form.errors.discount_expiration }}</p>
                 </div>
               </div>
             </section>

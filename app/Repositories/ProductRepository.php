@@ -21,9 +21,13 @@ class ProductRepository implements ProductRepositoryInterface {
         $this->attributeRepository = $attributeRepository;
     }
 
-    public function getAll(?string $searchTerm = '', int|null $page = null, int|null $limit = null, array $attributeValueIds = [])
+    public function getAll(?string $searchTerm = '', int|null $page = null, int|null $limit = null, array $attributeValueIds = [], ?string $categoryId = null)
     {
         $scout = $this->model->search($searchTerm);
+
+        if ($categoryId) {
+            $scout->where('category_id', $categoryId);
+        }
 
         if (!empty($attributeValueIds)) {
             $grouped = $this->attributeRepository->getGroupedValuesByIds($attributeValueIds);
