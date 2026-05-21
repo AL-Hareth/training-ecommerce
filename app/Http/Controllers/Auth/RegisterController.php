@@ -25,6 +25,6 @@ class RegisterController extends Controller
 
         Auth::login($user);
 
-        return Inertia::location(route('home'));
+        return redirect()->route('home');
     }
 }

@@ -26,7 +26,7 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         // Force a full reload so the Navbar immediately reflects the new auth state
-        return Inertia::location(route('home'));
+        return redirect()->route('home');
     }
 
     public function destroy(Request $request) {
